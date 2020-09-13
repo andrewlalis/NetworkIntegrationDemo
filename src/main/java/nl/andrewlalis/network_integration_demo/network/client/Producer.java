@@ -5,6 +5,8 @@ import nl.andrewlalis.network_integration_demo.network.Message;
 import nl.andrewlalis.network_integration_demo.network.MessageType;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -13,11 +15,14 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 @Slf4j
 public class Producer extends Client {
-	private static final int MIN_DELAY = 1000;
-	private static final int MAX_DELAY = 10000;
+	public static final int MIN_DELAY = 1000;
+	public static final int MAX_DELAY = 10000;
+
+	private List<Integer> sentNumbers;
 
 	public Producer(String ip, int port) throws IOException {
 		super(ip, port);
+		this.sentNumbers = new ArrayList<>();
 	}
 
 	@Override
@@ -38,6 +43,7 @@ public class Producer extends Client {
 		int delay = random.nextInt(MIN_DELAY, MAX_DELAY);
 		try {
 			this.send(new Message(MessageType.NUMBER, Integer.toString(number)));
+			this.sentNumbers.add(number);
 			log.info("Produced number {} and sent it to delegator.", number);
 			Thread.sleep(delay);
 		} catch (IOException e) {
@@ -45,5 +51,9 @@ public class Producer extends Client {
 		} catch (InterruptedException e) {
 			log.warn("Interrupted while waiting on random delay before sending another number.");
 		}
+	}
+
+	public Integer[] getNumbersProduced() {
+		return this.sentNumbers.toArray(new Integer[0]);
 	}
 }

@@ -47,7 +47,15 @@ public class Consumer extends Client {
 				log.info("Received number {}, bringing total received numbers to {}.", number, this.numbers.size());
 			}
 		} catch (IOException | ClassNotFoundException e) {
-			log.error("Could not receive message.");
+			this.shutdown();
 		}
+	}
+
+	public int getPreferredMultiple() {
+		return this.preferredMultiple;
+	}
+
+	public Integer[] getNumbersConsumed() {
+		return this.numbers.toArray(new Integer[0]);
 	}
 }

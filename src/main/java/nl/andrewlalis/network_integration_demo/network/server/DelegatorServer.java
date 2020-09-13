@@ -10,7 +10,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -24,6 +23,16 @@ public class DelegatorServer extends StoppableThread {
 	public DelegatorServer(int port) throws IOException {
 		this.connectionManagers = new ArrayList<>();
 		this.serverSocket = new ServerSocket(port);
+	}
+
+	@Override
+	public void shutdown() {
+		super.shutdown();
+		try {
+			this.serverSocket.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
@@ -50,6 +59,7 @@ public class DelegatorServer extends StoppableThread {
 	public void afterStop() {
 		log.info("Shutting down all connection managers.");
 		this.connectionManagers.forEach(StoppableThread::shutdown);
+		this.connectionManagers.forEach(Thread::interrupt);
 		for (DelegatorClientConnectionManager connectionManager : this.connectionManagers) {
 			try {
 				connectionManager.join();
@@ -57,11 +67,7 @@ public class DelegatorServer extends StoppableThread {
 				log.error("Could not join on connection manager thread after shutting it down.");
 			}
 		}
-		try {
-			this.serverSocket.close();
-		} catch (IOException e) {
-			log.error("Could not close server socket.");
-		}
+		this.connectionManagers.clear();
 	}
 
 	/**
@@ -94,5 +100,13 @@ public class DelegatorServer extends StoppableThread {
 				log.error("Could not forward number to consumer.");
 			}
 		}
+	}
+
+	/**
+	 *
+	 * @return
+	 */
+	public int getNumberOfConnectedClients() {
+		return this.connectionManagers.size();
 	}
 }

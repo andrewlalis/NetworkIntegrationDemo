@@ -32,6 +32,16 @@ public class DelegatorClientConnectionManager extends StoppableThread {
 		this.objectInputStream = new ObjectInputStream(this.clientSocket.getInputStream());
 	}
 
+	@Override
+	public void shutdown() {
+		super.shutdown();
+		try {
+			this.clientSocket.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	/**
 	 * Before beginning the loop, wait for and read an initial message which
 	 * will be sent by the client once it connects. This is used to identify the
@@ -68,17 +78,7 @@ public class DelegatorClientConnectionManager extends StoppableThread {
 				}
 			}
 		} catch (IOException | ClassNotFoundException e) {
-			log.error("Could not read message from client.");
-		}
-	}
-
-	@Override
-	public void afterStop() {
-		try {
-			this.sendToClient(new Message(MessageType.DISCONNECT, ""));
-			this.clientSocket.close();
-		} catch (IOException e) {
-			log.error("Could not shutdown connection with client.");
+			this.shutdown();
 		}
 	}
 
